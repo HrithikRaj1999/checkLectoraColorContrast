@@ -1,0 +1,19 @@
+{
+  "name": "colorcontrast",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "css": "^3.0.0",
+    "fs-extra": "^11.2.0",
+    "lodash": "^4.17.21",
+    "puppeteer": "^23.8.0"
+  }
+}

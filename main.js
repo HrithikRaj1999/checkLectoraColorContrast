@@ -6,7 +6,10 @@ const fs = require("fs-extra");
 const puppeteer = require("puppeteer");
 const path = require("path");
 const checkDynamicColorContrastCheck = require("./dynamicColorContrastCheck");
+
 async function main() {
+  const staticLogs = [];
+  const dynamicLogs = [];
   storeHtmlFilePaths();
   storeCssFilePaths();
   const htmlFilesPathArray = JSON.parse(
@@ -31,7 +34,7 @@ async function main() {
     console.log(
       "Testing is Running .......",
       Math.ceil((done / htmlFilesPathArray.length) * 100),
-      "  %"
+      "%"
     );
     await page.goto(fileUrl, { waitUntil: "domcontentloaded" });
     await page.goto(fileUrl, { waitUntil: "load" });
@@ -40,13 +43,14 @@ async function main() {
     await page.waitForSelector("body");
     const { xlsxArray, totalChecked, totalFailed } = await checkStaticCCwithCss(
       page,
-      styleSheetnameArray
+      styleSheetnameArray,
+      staticLogs
     );
     const {
       xlsxArray: xlsxArray2,
       totalChecked: totalChecked2,
       totalFailed: totalFailed2,
-    } = await checkDynamicColorContrastCheck(page);
+    } = await checkDynamicColorContrastCheck(page, dynamicLogs);
     totalInstChecked += totalChecked + totalChecked2;
     totalInstFailed += totalFailed + totalFailed2;
     data = [...data, ...xlsxArray, ...xlsxArray2];
@@ -58,12 +62,14 @@ async function main() {
       [`Total instances Failed`]: totalInstFailed,
     },
     ...data,
+    { logs: [...staticLogs, ...dynamicLogs] },
   ];
-  console.log("Testing is Running ..................", 100, " %");
-  fs.writeFileSync(path.join(__dirname, "Output.json"), JSON.stringify(data));
-  console.log(
-    `Testing Completed Total instances checked: ${totalInstChecked},Total instances Failed: ${totalInstFailed}`
+  console.log("Testing is Running .......", 100, " %");
+  fs.writeFileSync(
+    path.join(__dirname, "Operation_logs.json"),
+    JSON.stringify(data)
   );
+  console.log(`Testing Completed Check Operation_logs for further details`);
 
   await browser.close();
 }

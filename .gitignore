@@ -27,3 +27,5 @@ yarn-error.log*
 *.zip*
 /lectora_Package
 lectora_Package
+
+Output.json

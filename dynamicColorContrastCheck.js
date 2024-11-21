@@ -16,12 +16,12 @@ const checkContrast = require("./checkContrastCoreLogic.js");
  *  - `totalChecked`: Total number of elements checked.
  *  - `totalFailed`: Total number of elements that failed the contrast check.
  */
-async function checkDynamicColorContrastCheck(page) {
+async function checkDynamicColorContrastCheck(page, logs2) {
   try {
     let data = []; // Array to store failed elements
     let totalChecked = 0; // Counter for total elements checked
     let totalFailed = 0; // Counter for total failures
-
+    let logs2 = [];
     // Step 1: Fetch elements and their computed styles from the webpage
     const elements = await page.evaluate(() => {
       /**
@@ -44,7 +44,6 @@ async function checkDynamicColorContrastCheck(page) {
         ) {
           return backgroundColor;
         }
-
         // Check the parent element recursively
         return getEffectiveBackgroundColor(element.parentElement);
       }
@@ -52,7 +51,7 @@ async function checkDynamicColorContrastCheck(page) {
       // Select all target elements and extract their details
       return Array.from(
         document.querySelectorAll(
-          "div, span, p, header, footer, h1, h2, h3, h4, h5, h6, ul, li"
+          "div, span, p, header, footer, h1, h2, h3, h4, h5, h6, article, section, blockquote, pre, code, ul, ol, li, a, b, i, u, strong, em, small, mark, sub, sup, br, hr, form, input, textarea, button, select, option, optgroup, label, fieldset, legend, output, datalist, progress, meter, img, video, audio, source, track, picture, canvas, svg, iframe, table, caption, thead, tbody, tfoot, tr, td, th, col, colgroup, details, summary, dialog, nav, main, aside, figure, figcaption, time, address, cite, q, abbr, kbd, samp, var, data, ruby, rt, rp, wbr"
         )
       ).map((element) => ({
         text: element.textContent.trim(), // Text content inside the element
@@ -72,6 +71,11 @@ async function checkDynamicColorContrastCheck(page) {
     // Step 2: Loop through each element and check color contrast
     for (const element of elements) {
       // Skip elements that have no text
+      logs2.push(
+        `Checking for Page:${(await page.title(), await page.url())}, Tag: ${
+          element.selector
+        } with ID: ${element.id || "No ID"}`
+      );
       if (!element.text) continue;
 
       totalChecked += 1; // Increment the checked elements counter
@@ -114,9 +118,15 @@ async function checkDynamicColorContrastCheck(page) {
         } catch (error) {
           // If the element fails the contrast check, log the failure
           totalFailed += 1; // Increment failure counter
-
+          const title = (await page.url()).split("/");
+          logs2.push(
+            `Error: Page:${title}, Tag ${element.selector} with ID: ${
+              element.id || "No ID"
+            }. Reason: ${error.message}`
+          );
           data.push({
             Tag: element.html, // Store the element's outer HTML
+            PageName: title.slice(title.length - 2, title.length).join("/"),
             Reason_For_Failing: error.message, // Store the failure reason
           });
         }
